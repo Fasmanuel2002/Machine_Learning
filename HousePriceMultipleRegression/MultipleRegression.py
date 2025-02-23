@@ -9,27 +9,32 @@ def main():
     modelForTraining = pd.read_csv("house-prices-advanced-regression-techniques/cleaned_train.csv") 
     
     
-    #Normalize X and Y
     X = modelForTraining.iloc[:, 0:38]  # Evidence
     Y = modelForTraining["SalePrice"]   # Label
     epsilon = 1e-8
-    # Normalizar X y Y por columnas
-    X_normalize = (X - X.mean()) / (X.std() + epsilon)
-    Y_normalize = (Y - Y.mean()) / (Y.std() + epsilon)  
     
-
+    
+    Y_orig_mean = Y.mean()
+    Y_orig_std = Y.std()
+    
+    
+    X_normalize = (X - X.mean()) / (X.std() + epsilon)
+    
+    Y_normalize = (Y - Y_orig_mean) / (Y_orig_std + epsilon)
+    
+    
     X_multi_norm = np.array(X_normalize).T
     Y_multi_norm = np.array(Y_normalize).reshape((1, len(Y_normalize)))
     
+   
     FinalParameter = nn_model(X_multi_norm, Y_multi_norm, numberInterations=100, learning_rate=0.1, beta=0.9, printCost=True)
     print(f"Gradient descent result: W, b = {FinalParameter['W']}, {FinalParameter['b']}")
-
-    # Tomemos una fila de X como ejemplo de predicción
+    
+   
     X_pred = X_multi_norm[:, 0]  # Primera casa en los datos
 
-    #Predecir el precio de la casa
-    predicted_price = prediction(X_multi_norm, Y_multi_norm, FinalParameter, X_pred)
-
+   
+    predicted_price = prediction(X_multi_norm, Y_multi_norm, FinalParameter, X_pred, Y_orig_mean, Y_orig_std)
     print(f"Predicted house price (denormalized): {predicted_price}")
 
 #Layers
@@ -97,15 +102,15 @@ def gradient_descent(grads, parameters, learning_rate=1.2, beta=0.9, v=None):
             "db": np.zeros_like(parameters["b"])
         }
 
-    # Extraer parámetros
+   
     W = parameters["W"]
     b = parameters["b"]
     
-    # Extraer gradientes
+  
     dW = grads["dw"]
     db = grads["db"]
 
-    # Aplicar Momentum
+   
     v["dW"] = beta * v["dW"] + (1 - beta) * dW
     v["db"] = beta * v["db"] + (1 - beta) * db
 
@@ -113,7 +118,7 @@ def gradient_descent(grads, parameters, learning_rate=1.2, beta=0.9, v=None):
     W -= learning_rate * v["dW"]
     b -= learning_rate * v["db"]
 
-    # Devolver los nuevos parámetros y las velocidades
+   
     return {"W": W, "b": b}, v
 #Neuronal Model 
 def nn_model(X, Y, numberInterations = 10, learning_rate = 1.2,beta = 0.9, printCost = False):
@@ -141,30 +146,24 @@ def nn_model(X, Y, numberInterations = 10, learning_rate = 1.2,beta = 0.9, print
         
     return parameters
 
-def prediction(X, Y, parameters, X_pred):
+def prediction(X, Y, parameters, X_pred, Y_orig_mean, Y_orig_std):
     W = parameters["W"]
     b = parameters["b"]
 
-    # Normalizar X y Y por columnas
+    # Calcuate the mean and std of X
     X_mean = np.mean(X, axis=1, keepdims=True)
-    X_std = np.std(X, axis=1, keepdims=True) + 1e-8  # Se agrega epsilon para evitar división por cero
+    X_std = np.std(X, axis=1, keepdims=True) + 1e-8
 
-    # Reacomodar X_pred para que sea una matriz columna
+    # reshape X_pred to be a column vector
     X_pred = X_pred.reshape(-1, 1)
-
-    # Normalizar X_pred de forma elemento a elemento
     X_pred_norm = (X_pred - X_mean) / X_std
-    
-    # Realizar la predicción
+
+    # Make the prediction
     y_hat = np.matmul(W, X_pred_norm) + b
 
-    # Desnormalizar la predicción
-    Y_mean = np.mean(Y)
-    Y_std = np.std(Y) + 1e-8
-    y_pred = y_hat * Y_std + Y_mean
-
-    return y_pred[0]  # Devolver solo el valor escalar
-
+    # Desnormalizar using the original mean and std of Y
+    y_pred = y_hat * Y_orig_std + Y_orig_mean
+    return y_pred[0]
 if __name__ == "__main__":
     main()
     

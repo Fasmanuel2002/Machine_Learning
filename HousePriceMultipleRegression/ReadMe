@@ -1,0 +1,16 @@
+This is a Machine Learning program that implements an algorithm on the given image.
+I created it to practice my mathematics. Below is the step-by-step process I followed in this project:  
+
+1) Data Cleaning – Preprocessed the data to remove inconsistencies.  
+2) Mathematical Formulation – Defined the necessary mathematical concepts.  
+3) Python Project Implementation:  
+   - Layers: Defined input (X) and output (Y) layers.  
+   - Parameter Initialization: Initialized weights (W) and bias (b).  
+   - Forward Propagation: Computed the output using the formula  Y = W @ X + b
+   - Cost Computation: Calculated the cost function L(w,b) = 1/2*m * (y_hat - y)**2.  
+   - Backpropagation: Derived partial derivatives to compute gradients dW  and db .  
+   - Gradient Descent: Applied the Gradient Descent algorithm to optimize parameters.  
+   - Neural Network Model: Combined all components into a functional model.  
+4) Prediction Generation – Used the trained model to make predictions.  
+5) Result Comparison – Evaluated the predictions against actual values.  
+

@@ -1,0 +1,19 @@
+This is a Machine Learning program that implements an algorithm on the given image.
+I created it to practice my mathematics. Below is the step-by-step process I followed in this project:  
+
+1) Seeing the Data, and insight about all inputs and outputs
+2) The 4 inputs were sepal_length, sepal_width, petal_length, and petal_width and 3 outputs were setosa, versicolor and virginica
+3) Mathematical Formulation – Defined the necessary mathematical concepts, with classifications and activation formulas.  
+4) Python Project Implementation:  
+   - I created a variable that name was Y_one_hot that inserted for setosa[1,0,0],versicolor[0,1,0] and virginica[0,0,1] for multiple output 
+   - Layers: Defined input (X) and output (Y) layers(that in this case were 3).  
+   - Parameter Initialization: Initialized weights (W) and bias (b). 
+   - Forward Propagation: Computed the output using the formula  Y = W @ X + b
+   - Activation(Sigmoid): Calculated the activation for the Machine Learnign algorithm that was 1/(1 + exp(-Z)) , Z is the output from the forward propagation
+   - Cost Computation: Calculated the cost function L(w,b) = (-Y_one_hot * log(A) - (1 - Y_one_hot) * log(1 - A)).  
+   - Backpropagation: Derived partial derivatives to compute gradients dW  and db.  
+   - Gradient Descent: Applied the Gradient Descent algorithm to optimize parameters.  
+   - Neural Network Model: Combined all components into a functional model.  
+5) Prediction Generation – Used the trained model to make predictions.  
+6) Evaluate Model - its used for evualated model % prediction
+7) Result Comparison – Evaluated the predictions against actual values.  

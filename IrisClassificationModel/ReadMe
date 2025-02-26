@@ -17,3 +17,6 @@ I created it to practice my mathematics. Below is the step-by-step process I fol
 5) Prediction Generation – Used the trained model to make predictions.  
 6) Evaluate Model - its used for evualated model % prediction
 7) Result Comparison – Evaluated the predictions against actual values.  
+
+
+-IrisDiagram.py is for showing the Diagrams of the Data

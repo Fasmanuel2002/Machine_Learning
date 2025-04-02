@@ -63,7 +63,7 @@ def cost_fuction(Y_status_Map,Z_softMax):
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
-def backPropagation(Z_softMax,X, Y_status_Map, iterations):
+def backPropagation(Z_softMax,X, Y_status_Map):
     m = Y_status_Map.shape[0]
 
     dW = (X.T @ (Z_softMax - Y_status_Map)) / m

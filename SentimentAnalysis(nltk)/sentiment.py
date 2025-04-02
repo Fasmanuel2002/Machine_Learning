@@ -14,8 +14,6 @@ def main():
                   "Bi-Polar":[0,0,0,0,0,1,0], "Personality Disorder":[0,0,0,0,0,0,1]}
     Y_status_Map = pd.DataFrame(Y.map(status_map).tolist(), columns=["Anxiety","Normal","Suicidal","Depression","Stress","Bi-Polar","Personality Disorder"]).values()
 
-    print(Y_status_Map)
-
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]

@@ -13,7 +13,8 @@ def main():
                   "Depression":[0,0,0,1,0,0,0], "Stress":[0,0,0,0,1,0,0],
                   "Bi-Polar":[0,0,0,0,0,1,0], "Personality Disorder":[0,0,0,0,0,0,1]}
     Y_status_Map = pd.DataFrame(Y.map(status_map).tolist(), columns=["Anxiety","Normal","Suicidal","Depression","Stress","Bi-Polar","Personality Disorder"]).values()
-
+    
+    nn_network(X, Y_status_Map, 2000, False)
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
@@ -95,5 +96,14 @@ def gradient_Descent(parameters,cache,learning_rate=1.2):
     }
     return parameters
     
+
+#8 NN_network
+def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = False):
+    n_x, n_y = layer(X, Y_status_Map)
+    
+    parameters = parameters_initialization(n_x, n_y)
+    
+    for iteration in range(number_of_iterations):
+        print("ok")
 if __name__ == "__main__":
     main()

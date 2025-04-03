@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from nltk.sentiment import SentimentIntensityAnalyzer
 
 def main():
@@ -12,7 +12,16 @@ def main():
     status_map = {"Anxiety":[1,0,0,0,0,0,0], "Normal":[0,1,0,0,0,0,0], "Suicidal":[0,0,1,0,0,0,0],
                   "Depression":[0,0,0,1,0,0,0], "Stress":[0,0,0,0,1,0,0],
                   "Bi-Polar":[0,0,0,0,0,1,0], "Personality Disorder":[0,0,0,0,0,0,1]}
-    Y_status_Map = pd.DataFrame(Y.map(status_map).tolist(), columns=["Anxiety","Normal","Suicidal","Depression","Stress","Bi-Polar","Personality Disorder"]).values()
+    
+    Y = pd.Series(["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
+    
+    mapped_values = Y.map(status_map)
+    
+    mapped_values = mapped_values.apply(lambda x: x if isinstance(x, list) else [0, 0, 0, 0, 0, 0, 0])
+
+# Crear DataFrame
+    Y_status_Map = pd.DataFrame(mapped_values.tolist(), columns=["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
+    
     
     nn_network(X, Y_status_Map, 2000, False)
 ## 1)Layers
@@ -104,6 +113,7 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
     parameters = parameters_initialization(n_x, n_y)
     
     for iteration in range(number_of_iterations):
-        print("ok")
+        ...
+        
 if __name__ == "__main__":
     main()

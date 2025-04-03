@@ -21,7 +21,7 @@ def main():
     Y_status_Map = pd.DataFrame(mapped_values.tolist(), columns=["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
     
     
-    nn_network(X, Y_status_Map, 2000, False)
+    nn_network(X, Y_status_Map, 2000, True)
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
@@ -111,7 +111,21 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
     parameters = parameters_initialization(n_x, n_y)
     
     for iteration in range(number_of_iterations):
-        ...
+        Z_softMax = forward_propagation(X, parameters)
+        
+        ActivationSoftMax = activation_softMax(Z_softMax)
+        
+        cost = cost_fuction(Y_status_Map, Z_softMax)
+        cache = backPropagation(ActivationSoftMax, X, Y_status_Map)
+        
+        FinalParameter = gradient_Descent(parameters, cache, 0.2)
+        
+        if printCostFalse:
+            print(f"For iteration: {iteration}:{cost} this is the cost")
+        
+    return FinalParameter
+        
+        
         
 if __name__ == "__main__":
     main()

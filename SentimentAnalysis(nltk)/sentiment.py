@@ -18,8 +18,6 @@ def main():
     mapped_values = Y.map(status_map)
     
     mapped_values = mapped_values.apply(lambda x: x if isinstance(x, list) else [0, 0, 0, 0, 0, 0, 0])
-
-# Crear DataFrame
     Y_status_Map = pd.DataFrame(mapped_values.tolist(), columns=["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
     
     

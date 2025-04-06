@@ -13,15 +13,16 @@ def main():
                   "Depression":[0,0,0,1,0,0,0], "Stress":[0,0,0,0,1,0,0],
                   "Bi-Polar":[0,0,0,0,0,1,0], "Personality Disorder":[0,0,0,0,0,0,1]}
     
-    Y = pd.Series(["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
     
     mapped_values = Y.map(status_map)
     
     mapped_values = mapped_values.apply(lambda x: x if isinstance(x, list) else [0, 0, 0, 0, 0, 0, 0])
     Y_status_Map = pd.DataFrame(mapped_values.tolist(), columns=["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
     
+    array_Y = np.array(Y_status_Map)
     
-    nn_network(X, Y_status_Map, 2000, True)
+    
+    nn_network(X, array_Y, 1000, True)
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
@@ -67,7 +68,7 @@ def forward_propagation(X,parameters):
 def cost_fuction(Y_status_Map,Z_softMax):
 
     m = Y_status_Map.shape[0]
-    cost_fuctionSoftMax = -np.sum(Y_status_Map * np.log(Z_softMax)) / m
+    cost_fuctionSoftMax = -np.sum(np.array(Y_status_Map) * np.log(Z_softMax)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
@@ -118,12 +119,12 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         cost = cost_fuction(Y_status_Map, Z_softMax)
         cache = backPropagation(ActivationSoftMax, X, Y_status_Map)
         
-        FinalParameter = gradient_Descent(parameters, cache, 0.2)
+        parameters = gradient_Descent(parameters, cache, 0.1)
         
         if printCostFalse:
             print(f"For iteration: {iteration}:{cost} this is the cost")
         
-    return FinalParameter
+    return parameters
         
         
         

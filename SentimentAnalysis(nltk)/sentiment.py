@@ -25,7 +25,8 @@ def main():
     X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
     
     
-    nn_network(X, array_Y, 1000, True)
+    
+    nn_network(X_normalize, array_Y, 1000, True)
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
@@ -122,7 +123,7 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         cost = cost_fuction(Y_status_Map, ActivationSoftMax)
         cache = backPropagation(ActivationSoftMax, X, Y_status_Map)
         
-        parameters = gradient_Descent(parameters, cache, 0.5)
+        parameters = gradient_Descent(parameters, cache, 1)
         
         if printCostFalse:
             print(f"For iteration: {iteration}:{cost} this is the cost")

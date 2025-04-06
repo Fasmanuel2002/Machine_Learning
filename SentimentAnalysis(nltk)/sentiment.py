@@ -19,21 +19,21 @@ def main():
     mapped_values = mapped_values.apply(lambda x: x if isinstance(x, list) else [0, 0, 0, 0, 0, 0, 0])
     Y_status_Map = pd.DataFrame(mapped_values.tolist(), columns=["Anxiety", "Normal", "Suicidal", "Depression", "Stress", "Bi-Polar", "Personality Disorder"])
     
-    array_Y = np.array(Y_status_Map)
+    
     
     ##Normalize X
     X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
     
     
     
-    nn_network(X_normalize, array_Y, 1000, True)
+    nn_network(X_normalize, Y_status_Map, 1000, True)
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
     n_h = 2
     n_y = Y_status_Map.shape[1]
 
-    return n_x, n_y
+    return n_x, n_h, n_y
 
 
 ##2)Parameters Initialization
@@ -46,7 +46,7 @@ def parameters_initialization(n_x,n_h,n_y):
     
     #Out put layers
     W2 = np.random.rand(n_y, n_h)
-    b2 = np.zerps((n_y, 1))
+    b2 = np.zeros((n_y, 1))
 
     
     assert (W1.shape == (n_h, n_x))
@@ -83,7 +83,7 @@ def forward_propagation(X,parameters):
     b2 = parameters['b2']
     
     
-    Z1 = np.matmul(X, W1) + b1.T
+    Z1 = (X @ W1) + b1
     A1 = np.tanh(Z1)
     
     Z2 = np.matmul(A1, W2) + b2.T
@@ -181,19 +181,19 @@ def gradient_Descent(parameters,grads,learning_rate=1.2):
     return parameters
     
 
-#8 NN_network
+#8 NN_network need to change
 def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = False):
-    n_x, n_y = layer(X, Y_status_Map)
+    n_x, n_h,n_y = layer(X, Y_status_Map)
     
-    parameters = parameters_initialization(n_x, n_y)
+    parameters = parameters_initialization(n_x,n_h, n_y)
     
     for iteration in range(number_of_iterations):
-        Z_softMax = forward_propagation(X, parameters)
+        A2, cache = forward_propagation(X, parameters)
         
-        ActivationSoftMax = activation_softMax(Z_softMax)
+        ActivationSoftMax = activation_softMax(A2)
         
         cost = cost_fuction(Y_status_Map, ActivationSoftMax)
-        cache = backPropagation(ActivationSoftMax, X, Y_status_Map)
+        cache = backPropagation(parameters, X, Y_status_Map, cache)
         
         parameters = gradient_Descent(parameters, cache, 1)
         

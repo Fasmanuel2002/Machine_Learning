@@ -30,20 +30,36 @@ def main():
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
+    n_h = 2
     n_y = Y_status_Map.shape[1]
 
     return n_x, n_y
 
 
 ##2)Parameters Initialization
-def parameters_initialization(n_x,n_y):
-    W = np.random.rand(n_x,n_y)
-    b = np.zeros((n_y,1))
+def parameters_initialization(n_x,n_h,n_y):
+    
+    
+    #First Layer before Output
+    W1 = np.random.rand(n_h,n_x)
+    b1 = np.zeros((n_h,1))
+    
+    #Out put layers
+    W2 = np.random.rand(n_y, n_h)
+    b2 = np.zerps((n_y, 1))
 
     
+    assert (W1.shape == (n_h, n_x))
+    assert (b1.shape == (n_h, 1))
+    assert (W2.shape == (n_y, n_h))
+    assert (b2.shape == (n_y, 1))
+    
+    
     parameters = {
-        "W":W,
-        "b":b
+        "W1":W1,
+        "b1":b1,
+        "W2":W2,
+        "b2":b2
     }
     
 

@@ -21,6 +21,9 @@ def main():
     
     array_Y = np.array(Y_status_Map)
     
+    ##Normalize X
+    X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
+    
     
     nn_network(X, array_Y, 1000, True)
 ## 1)Layers
@@ -116,10 +119,10 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         
         ActivationSoftMax = activation_softMax(Z_softMax)
         
-        cost = cost_fuction(Y_status_Map, Z_softMax)
+        cost = cost_fuction(Y_status_Map, ActivationSoftMax)
         cache = backPropagation(ActivationSoftMax, X, Y_status_Map)
         
-        parameters = gradient_Descent(parameters, cache, 0.1)
+        parameters = gradient_Descent(parameters, cache, 0.5)
         
         if printCostFalse:
             print(f"For iteration: {iteration}:{cost} this is the cost")

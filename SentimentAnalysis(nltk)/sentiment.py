@@ -23,6 +23,7 @@ def main():
     
     ##Normalize X
     X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
+    print(f"Shape of X_normalize: {X_normalize.shape}")
     
     
     
@@ -82,11 +83,10 @@ def forward_propagation(X,parameters):
     W2 = parameters['W2']
     b2 = parameters['b2']
     
-    
-    Z1 = (X @ W1) + b1
+    Z1 = np.matmul(W1, X.T) + b1
     A1 = np.tanh(Z1)
     
-    Z2 = np.matmul(A1, W2) + b2.T
+    Z2 = np.matmul(W2 ,A1) + b2
     A2 = activation_softMax(Z2)
     
     cache = {
@@ -107,15 +107,16 @@ def forward_propagation(X,parameters):
 # h(x) = ^y 
 def cost_fuction(Y_status_Map,A2):
 
-    m = Y_status_Map.shape[0]
-    cost_fuctionSoftMax = -np.sum(np.array(Y_status_Map) * np.log(A2)) / m
+    Y_T = np.array(Y_status_Map).T
+    m = Y_T.shape[1]
+    cost_fuctionSoftMax = -np.sum(Y_T * np.log(A2)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
 def backPropagation(parameters, X, Y_status_Map,cache):
     
-    m = Y_status_Map.shape[0]
-
+    m = X.shape[0]
+    Y_T = np.array(Y_status_Map).T 
 
     #all Parameters
     W1 = parameters['W1']
@@ -127,16 +128,16 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     Z1 = cache['Z1']
 
     #Exit
-    dZ2 = A2 - Y_status_Map #Output -> Hidden Layer
-    dW_second_layer = (A1.T @ dZ2) / m
-    db_second_layer = np.sum(dZ2, axis=0, keepdims=True).T / m
+    dZ2 = A2 - Y_T #Output -> Hidden Layer
+    dW_second_layer = (dZ2 @ A1.T) / m
+    db_second_layer = np.sum(dZ2, axis=1, keepdims=True) / m
 
 
     #Its the difference between the hidden layer and W2 
-    dA1 = dZ2 @ W2.T
+    dA1 =  W2.T @ dZ2 
     dZ1 = dA1 * (1- np.power(A1, 2))
-    dW_first_layer  = (X.T @ dZ1) / m
-    db_first_layer = np.sum(dZ1, axis=0, keepdims=True).T / m
+    dW_first_layer  = (dZ1 @ X.T) / m
+    db_first_layer = np.sum(dZ1, axis=1, keepdims=True).T / m
     
 
     grads = {
@@ -170,7 +171,7 @@ def gradient_Descent(parameters,grads,learning_rate=1.2):
     
     
     W1 = W1 - learning_rate * dW1
-    b2 = b2 - learning_rate * dW2
+    b1 = b1 - learning_rate * db1
     
     parameters = {
         "W1":W1,
@@ -193,7 +194,7 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         ActivationSoftMax = activation_softMax(A2)
         
         cost = cost_fuction(Y_status_Map, ActivationSoftMax)
-        cache = backPropagation(parameters, X, Y_status_Map, cache)
+        cache = backPropagation(parameters, X.T, Y_status_Map, cache)
         
         parameters = gradient_Descent(parameters, cache, 1)
         

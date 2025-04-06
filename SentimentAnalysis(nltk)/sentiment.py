@@ -73,43 +73,85 @@ def activation_softMax(Z):
     
 ## 4) Forward Propagation
 def forward_propagation(X,parameters):
-    W = parameters['W']
-    b = parameters['b']
     
-    Z = np.matmul(X, W) + b.T
-    Z_softMax = activation_softMax(Z)
+    #From the first layer(input -> hidden layer)
+    W1 = parameters['W1']
+    b1 = parameters['b1']
+    
+    #From the hidden layer to the output
+    W2 = parameters['W2']
+    b2 = parameters['b2']
+    
+    
+    Z1 = np.matmul(X, W1) + b1.T
+    A1 = activation_softMax(Z1)
+    
+    Z2 = np.matmul(A1, W2) + b2.T
+    A2 = activation_softMax(Z2)
+    
+    cache = {
+        "Z1":Z1,
+        "A1":A1,
+        "Z2": Z2,
+        "A2": A2
+    }
+    
+    
+    
 
-    return Z_softMax
+    return (A2,cache)
 
 ## 5) Log Loss function in SoftMax Likehood(Maximize)
 
 # y = Y_status_Map
 # h(x) = ^y 
-def cost_fuction(Y_status_Map,Z_softMax):
+def cost_fuction(Y_status_Map,A2):
 
     m = Y_status_Map.shape[0]
-    cost_fuctionSoftMax = -np.sum(np.array(Y_status_Map) * np.log(Z_softMax)) / m
+    cost_fuctionSoftMax = -np.sum(np.array(Y_status_Map) * np.log(A2)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
-def backPropagation(Z_softMax,X, Y_status_Map):
+def backPropagation(parameters, X, Y_status_Map,cache):
+    
     m = Y_status_Map.shape[0]
 
-    dW = (X.T @ (Z_softMax - Y_status_Map)) / m
-    db = np.sum(Z_softMax - Y_status_Map, axis=0, keepdims=True).T / m
 
-    cache = {
-        "dW":dW,
-        "db":db
+    #all Parameters
+    W1 = parameters['W1']
+    W2 = parameters['W2']
+
+    #all forward propagation
+    A1 = cache['A1']
+    A2 = cache['A2']
+    Z1 = cache['Z1']
+
+    #Exit
+    dZ2 = A2 - Y_status_Map #Output -> Hidden Layer
+    dW_second_layer = (A1.T @ dZ2) / m
+    db_second_layer = np.sum(dZ2, axis=0, keepdims=True).T / m
+
+
+    dA1 = dZ2 @ W2.T
+    dZ1 = dA1 * (1- np.tanh(A1, 2))
+    dW_first_layer  = (X.T @ dZ1) / m
+    db_first_layer = np.sum(dZ1, axis=0, keepdims=True).T / m
+    
+
+    grads = {
+        "dW2":dW_second_layer,
+        "db2":db_second_layer,
+        "dW1":dW_first_layer,
+        "db1":db_first_layer
     }
     
-    return cache
+    return grads
 
-def gradient_Descent(parameters,cache,learning_rate=1.2):
+def gradient_Descent(parameters,grads,learning_rate=1.2):
     
-    #dW and dB
-    dW = cache['dW']
-    db = cache['db']
+    #dW2 and dB2 from the output -> hidden layer
+    dW2 = grads['dW2']
+    db2 = grads['db2']
     
     #w and b
     W = parameters['W']

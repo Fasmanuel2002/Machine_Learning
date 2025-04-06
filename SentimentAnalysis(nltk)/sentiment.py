@@ -84,7 +84,7 @@ def forward_propagation(X,parameters):
     
     
     Z1 = np.matmul(X, W1) + b1.T
-    A1 = activation_softMax(Z1)
+    A1 = np.tanh(Z1)
     
     Z2 = np.matmul(A1, W2) + b2.T
     A2 = activation_softMax(Z2)
@@ -132,8 +132,9 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     db_second_layer = np.sum(dZ2, axis=0, keepdims=True).T / m
 
 
+    #Its the difference between the hidden layer and W2 
     dA1 = dZ2 @ W2.T
-    dZ1 = dA1 * (1- np.tanh(A1, 2))
+    dZ1 = dA1 * (1- np.power(A1, 2))
     dW_first_layer  = (X.T @ dZ1) / m
     db_first_layer = np.sum(dZ1, axis=0, keepdims=True).T / m
     
@@ -153,16 +154,29 @@ def gradient_Descent(parameters,grads,learning_rate=1.2):
     dW2 = grads['dW2']
     db2 = grads['db2']
     
-    #w and b
-    W = parameters['W']
-    b = parameters['b']
+    #dW1 and dB1 from the hidden layer -> input layer
     
-    W = W - learning_rate * dW
-    b = b - learning_rate * db
+    dW1 = grads['dW1']
+    db1 = grads['db1']
+    #w and b
+    W2 = parameters['W2']
+    b2 = parameters['b2']
+    
+    W1 = parameters['W1']
+    b1 = parameters['b1']
+    
+    W2 = W2 - learning_rate * dW2
+    b2 = b2 - learning_rate * db2
+    
+    
+    W1 = W1 - learning_rate * dW1
+    b2 = b2 - learning_rate * dW2
     
     parameters = {
-        "W":W,
-        "b":b
+        "W1":W1,
+        "b1":b1,
+        "W2":W2,
+        "b2":b2
     }
     return parameters
     

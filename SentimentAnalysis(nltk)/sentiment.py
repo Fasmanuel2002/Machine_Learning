@@ -24,8 +24,9 @@ def main():
     ##Normalize X
     X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
     X_normalize = X_normalize.T
-    print(f"Shape of X_normalize: {X_normalize.shape}")
     
+    
+
     
     
     nn_network(X_normalize, Y_status_Map, 1000, True)
@@ -84,7 +85,7 @@ def forward_propagation(X,parameters):
     W2 = parameters['W2']
     b2 = parameters['b2']
     
-    print(f"Shape of W1: {W1.T.shape}")
+    print(f"Shape of W1: {W1.shape}")
     print(f"Shape of X: {X.T.shape}")
     print(f"Shape of b1: {b1.shape}")
     Z1 = np.matmul(W1, X.T) + b1  
@@ -114,7 +115,7 @@ def cost_fuction(Y_status_Map,A2):
 
     Y_T = np.array(Y_status_Map)
     m = Y_T.shape[1]
-    cost_fuctionSoftMax = -np.sum(Y_T * np.log(A2)) / m
+    cost_fuctionSoftMax = -np.sum(Y_T @ np.log(A2)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation

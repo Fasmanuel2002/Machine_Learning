@@ -134,7 +134,7 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     Z1 = cache['Z1']
 
     #Exit
-    dZ2 = A2 - Y_T #Output -> Hidden Layer
+    dZ2 = A2 - Y_T.T #Output -> Hidden Layer
     dW_second_layer = (dZ2 @ A1.T) / m
     db_second_layer = np.sum(dZ2, axis=1, keepdims=True) / m
 

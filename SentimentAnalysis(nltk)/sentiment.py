@@ -45,7 +45,7 @@ def main():
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
     n_h1 = 20
-    n_h2 = 12
+    n_h2 = 20
     n_y = Y_status_Map.shape[1]
 
     return n_x, n_h1,n_h2, n_y
@@ -73,7 +73,7 @@ def parameters_initialization(n_x,n_h1,n_h2,n_y):
     assert (b1.shape == (n_h1, 1))
     assert (W2.shape == (n_h2, n_h1))
     assert (b2.shape == (n_h2, 1))
-    assert (W3.shape == (n_h2, n_h1))
+    assert (W3.shape == (n_y, n_h2))
     assert (b3.shape == (n_y, 1))
 
     
@@ -94,7 +94,11 @@ def parameters_initialization(n_x,n_h1,n_h2,n_y):
 def activation_softMax(Z):
     expZ = np.exp(Z - np.max(Z, axis=1, keepdims=True))
     return expZ / np.sum(expZ, axis=1, keepdims=True)
-    
+def relu(Z):
+    return np.maximum(0, Z)
+
+def relu_derivative(Z):
+    return Z > 0
 ## 4) Forward Propagation
 def forward_propagation(X,parameters):
     
@@ -111,11 +115,10 @@ def forward_propagation(X,parameters):
     b3 = parameters['b3']
     
     Z1 = np.matmul(W1, X.T) + b1  
-
-    A1 = np.tanh(Z1)
+    A1 = relu(Z1)
     
     Z2 = np.matmul(W2 ,A1) + b2
-    A2 = np.tanh(Z2)
+    A2 = relu(Z2)
     
     Z3 = np.matmul(W3, A2) + b3
     A3 = activation_softMax(Z3)
@@ -134,7 +137,7 @@ def forward_propagation(X,parameters):
     
     
 
-    return (A2,cache)
+    return (A3,cache)
 
 ## 5) Log Loss function in SoftMax Likehood(Maximize)
 
@@ -144,7 +147,7 @@ def cost_fuction(Y_status_Map,A2):
 
     Y_T = np.array(Y_status_Map)
     m = Y_T.shape[0]
-    cost_fuctionSoftMax = -np.sum(Y_T.T * np.log(A2)) / m
+    cost_fuctionSoftMax = -np.sum(Y_T * np.log(A2.T)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
@@ -156,26 +159,40 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     #all Parameters
     W1 = parameters['W1']
     W2 = parameters['W2']
+    W3 = parameters['W3']
 
     #all forward propagation
     A1 = cache['A1']
     A2 = cache['A2']
     Z1 = cache['Z1']
+    A3 = cache['A3']
+    Z3 = cache['Z3']
 
-    #Exit    
-    dZ2 = A2 - Y_T #Output -> Hidden Layer
-    dW_second_layer = (dZ2 @ A1.T) / m
-    db_second_layer = np.sum(dZ2, axis=1, keepdims=True) / m
+    #Layer from output -> second Layer
+    dZ3 = A3 - Y_T #Output -> Hidden Layer
+    dW_third_layer = (dZ3 @ A2.T) / m
+    db_third_layer = np.sum(dZ3, axis=1, keepdims=True) / m
+
 
 
     #Its the difference between the hidden layer and W2 
-    dA1 =  W2.T @ dZ2 
-    dZ1 = dA1 * (1- np.power(A1, 2))
-    dW_first_layer  = (dZ1 @ X) / m
-    db_first_layer = np.sum(dZ1, axis=1, keepdims=True) / m
+    dA2 =  W3.T @ dZ3 
+    dZ2 = dA2 * (1- np.power(A2, 2))
+    dW_second_layer  = (dZ2 @ A1.T) / m
+    db_second_layer = np.sum(dZ2, axis=1, keepdims=True) / m
+    
+    #First layer
+    dA1 = W2.T @ dZ2
+    dZ1 = dA1 * (1 - np.power(A1, 2))
+    dW_first_layer = (dZ1 @ X) / m
+    db_first_layer = np.sum(dZ1, axis=1, keepdims=True)
+    
+    
     
 
     grads = {
+        "dW3":dW_third_layer,
+        "db3":db_third_layer,
         "dW2":dW_second_layer,
         "db2":db_second_layer,
         "dW1":dW_first_layer,
@@ -187,51 +204,25 @@ def backPropagation(parameters, X, Y_status_Map,cache):
 def gradient_Descent(parameters,grads,learning_rate=1.2):
     
     #dW2 and dB2 from the output -> hidden layer
-    dW2 = grads['dW2']
-    db2 = grads['db2']
-    
-    #dW1 and dB1 from the hidden layer -> input layer
-    
-    dW1 = grads['dW1']
-    db1 = grads['db1']
-    #w and b
-    W2 = parameters['W2']
-    b2 = parameters['b2']
-    
-    W1 = parameters['W1']
-    b1 = parameters['b1']
-    
-    W2 = W2 - learning_rate * dW2
-    b2 = b2 - learning_rate * db2
-    
-    
-    W1 = W1 - learning_rate * dW1
-    b1 = b1 - learning_rate * db1
-    
-    parameters = {
-        "W1":W1,
-        "b1":b1,
-        "W2":W2,
-        "b2":b2
-    }
+    for l in [1, 2, 3]:
+        parameters[f'W{l}'] -= learning_rate * grads[f'dW{l}']
+        parameters[f'b{l}'] -= learning_rate * grads[f'db{l}']
     return parameters
     
 
 #8 NN_network need to change
 def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = False):
-    n_x, n_h,n_y = layer(X, Y_status_Map)
+    n_x,n_h1,n_h2,n_y = layer(X, Y_status_Map)
     
-    parameters = parameters_initialization(n_x,n_h, n_y)
-    
+    parameters = parameters_initialization(n_x,n_h1,n_h2, n_y)
     for iteration in range(number_of_iterations):
-        A2, cache = forward_propagation(X, parameters)
+        A3, cache = forward_propagation(X, parameters)
         
-        ActivationSoftMax = activation_softMax(A2)
         
-        cost = cost_fuction(Y_status_Map, ActivationSoftMax)
+        cost = cost_fuction(Y_status_Map, A3)
         cache = backPropagation(parameters, X, Y_status_Map, cache)
         
-        parameters = gradient_Descent(parameters, cache, 0.400)
+        parameters = gradient_Descent(parameters, cache, 0.500)
         
         if printCostFalse:
             print(f"Iteration {iteration} - Cost: {cost}")

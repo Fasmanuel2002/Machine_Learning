@@ -44,36 +44,46 @@ def main():
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
-    n_h = 20
+    n_h1 = 20
+    n_h2 = 12
     n_y = Y_status_Map.shape[1]
 
-    return n_x, n_h, n_y
+    return n_x, n_h1,n_h2, n_y
 
 
 ##2)Parameters Initialization
-def parameters_initialization(n_x,n_h,n_y):
+def parameters_initialization(n_x,n_h1,n_h2,n_y):
     
     
     #First Layer before Output
-    W1 = np.random.rand(n_h,n_x) * 0.01
-    b1 = np.zeros((n_h,1))
+    W1 = np.random.rand(n_h1,n_x) * 0.01
+    b1 = np.zeros((n_h1,1))
+    
+    
     
     #Out put layers
-    W2 = np.random.rand(n_y, n_h) * 0.01
-    b2 = np.zeros((n_y, 1))
+    W2 = np.random.rand(n_h2, n_h1) * 0.01
+    b2 = np.zeros((n_h2, 1))
+    
+    W3 = np.random.rand(n_y, n_h2) * 0.01
+    b3 = np.zeros((n_y, 1)) 
 
     
-    assert (W1.shape == (n_h, n_x))
-    assert (b1.shape == (n_h, 1))
-    assert (W2.shape == (n_y, n_h))
-    assert (b2.shape == (n_y, 1))
-    
+    assert (W1.shape == (n_h1, n_x))
+    assert (b1.shape == (n_h1, 1))
+    assert (W2.shape == (n_h2, n_h1))
+    assert (b2.shape == (n_h2, 1))
+    assert (W3.shape == (n_h2, n_h1))
+    assert (b3.shape == (n_y, 1))
+
     
     parameters = {
         "W1":W1,
         "b1":b1,
         "W2":W2,
-        "b2":b2
+        "b2":b2,
+        "W3":W3,
+        "b3":b3
     }
     
 
@@ -92,22 +102,33 @@ def forward_propagation(X,parameters):
     W1 = parameters['W1']
     b1 = parameters['b1']
     
-    #From the hidden layer to the output
+    #From the hidden layer one to the hidden layer two
     W2 = parameters['W2']
     b2 = parameters['b2']
+    
+    #from the hidden layer two to output 
+    W3 = parameters['W3']
+    b3 = parameters['b3']
     
     Z1 = np.matmul(W1, X.T) + b1  
 
     A1 = np.tanh(Z1)
     
     Z2 = np.matmul(W2 ,A1) + b2
-    A2 = activation_softMax(Z2)
+    A2 = np.tanh(Z2)
+    
+    Z3 = np.matmul(W3, A2) + b3
+    A3 = activation_softMax(Z3)
+    
+    
     
     cache = {
         "Z1":Z1,
         "A1":A1,
-        "Z2": Z2,
-        "A2": A2
+        "Z2":Z2,
+        "A2": A2,
+        "Z3":Z3,
+        "A3":A3
     }
     
     

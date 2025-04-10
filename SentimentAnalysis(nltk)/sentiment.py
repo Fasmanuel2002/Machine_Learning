@@ -26,9 +26,16 @@ def main():
     X_normalize = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
     
-    
+    X_small = X_normalize[:5000]
+    Y_small = Y_status_Map[:5000]
+    parameters = nn_network(X_small, Y_small, 2000, True)
 
-    parameters = nn_network(X_normalize, Y_status_Map, 1000, True)
+    true_labels = np.argmax(Y_status_Map.values, axis=1)
+    pred_labels = predict(X_normalize, parameters)
+    accuracy = np.mean(true_labels == pred_labels)
+    print(f"Training accuracy: {accuracy * 100:.2f}%")
+
+
 
 # Save the trained parameters
     with open("model_parameters.pkl", "wb") as f:
@@ -37,7 +44,7 @@ def main():
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
-    n_h = 2
+    n_h = 20
     n_y = Y_status_Map.shape[1]
 
     return n_x, n_h, n_y
@@ -48,11 +55,11 @@ def parameters_initialization(n_x,n_h,n_y):
     
     
     #First Layer before Output
-    W1 = np.random.rand(n_h,n_x)
+    W1 = np.random.rand(n_h,n_x) * 0.01
     b1 = np.zeros((n_h,1))
     
     #Out put layers
-    W2 = np.random.rand(n_y, n_h)
+    W2 = np.random.rand(n_y, n_h) * 0.01
     b2 = np.zeros((n_y, 1))
 
     
@@ -115,8 +122,8 @@ def forward_propagation(X,parameters):
 def cost_fuction(Y_status_Map,A2):
 
     Y_T = np.array(Y_status_Map)
-    m = Y_T.shape[1]
-    cost_fuctionSoftMax = -np.sum(Y_T @ np.log(A2)) / m
+    m = Y_T.shape[0]
+    cost_fuctionSoftMax = -np.sum(Y_T.T * np.log(A2)) / m
     return cost_fuctionSoftMax
 
 ## 6) Back propagation
@@ -203,14 +210,21 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         cost = cost_fuction(Y_status_Map, ActivationSoftMax)
         cache = backPropagation(parameters, X, Y_status_Map, cache)
         
-        parameters = gradient_Descent(parameters, cache, 1)
+        parameters = gradient_Descent(parameters, cache, 0.400)
         
-        if printCostFalse and iteration % 100 == 0:
+        if printCostFalse:
             print(f"Iteration {iteration} - Cost: {cost}")
 
     return parameters
         
-        
+def predict(X, parameters):
+    A2, _ = forward_propagation(X, parameters)
+    return np.argmax(A2, axis=0)
+
+# Evaluate
+
+
+
         
 if __name__ == "__main__":
     main()

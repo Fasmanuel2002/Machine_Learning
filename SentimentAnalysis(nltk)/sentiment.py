@@ -2,11 +2,12 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from nltk.sentiment import SentimentIntensityAnalyzer
-
+import pickle
 def main():
     df = pd.read_csv('SentimentAnalisisNew.csv')
     
     X = df.iloc[:, 2:6].values
+    X = X[:, :100]
     Y = df['status']
     
     status_map = {"Anxiety":[1,0,0,0,0,0,0], "Normal":[0,1,0,0,0,0,0], "Suicidal":[0,0,1,0,0,0,0],
@@ -22,14 +23,17 @@ def main():
     
     
     ##Normalize X
-    X_normalize = ((X - np.mean(X, axis=0)/ np.std(X, axis=0)))
-    X_normalize = X_normalize.T
-    
-    
+    X_normalize = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
     
     
-    nn_network(X_normalize, Y_status_Map, 1000, True)
+
+    parameters = nn_network(X_normalize, Y_status_Map, 1000, True)
+
+# Save the trained parameters
+    with open("model_parameters.pkl", "wb") as f:
+        pickle.dump(parameters, f)
+
 ## 1)Layers
 def layer(X,Y_status_Map):
     n_x = X.shape[1]
@@ -85,9 +89,6 @@ def forward_propagation(X,parameters):
     W2 = parameters['W2']
     b2 = parameters['b2']
     
-    print(f"Shape of W1: {W1.shape}")
-    print(f"Shape of X: {X.T.shape}")
-    print(f"Shape of b1: {b1.shape}")
     Z1 = np.matmul(W1, X.T) + b1  
 
     A1 = np.tanh(Z1)
@@ -133,8 +134,8 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     A2 = cache['A2']
     Z1 = cache['Z1']
 
-    #Exit
-    dZ2 = A2 - Y_T.T #Output -> Hidden Layer
+    #Exit    
+    dZ2 = A2 - Y_T #Output -> Hidden Layer
     dW_second_layer = (dZ2 @ A1.T) / m
     db_second_layer = np.sum(dZ2, axis=1, keepdims=True) / m
 
@@ -142,8 +143,8 @@ def backPropagation(parameters, X, Y_status_Map,cache):
     #Its the difference between the hidden layer and W2 
     dA1 =  W2.T @ dZ2 
     dZ1 = dA1 * (1- np.power(A1, 2))
-    dW_first_layer  = (dZ1 @ X.T) / m
-    db_first_layer = np.sum(dZ1, axis=1, keepdims=True).T / m
+    dW_first_layer  = (dZ1 @ X) / m
+    db_first_layer = np.sum(dZ1, axis=1, keepdims=True) / m
     
 
     grads = {
@@ -204,9 +205,9 @@ def nn_network(X, Y_status_Map, number_of_iterations = 10, printCostFalse = Fals
         
         parameters = gradient_Descent(parameters, cache, 1)
         
-        if printCostFalse:
-            print(f"For iteration: {iteration}:{cost} this is the cost")
-        
+        if printCostFalse and iteration % 100 == 0:
+            print(f"Iteration {iteration} - Cost: {cost}")
+
     return parameters
         
         

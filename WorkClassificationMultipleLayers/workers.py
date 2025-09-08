@@ -123,6 +123,8 @@ def back_propagation(cache, parameters, X, Y, keep_dropout = 0.8):
     
     
     #The most closest to the ouput layer
+    print(f"A2 shape {A2.shape}")
+    print(f"Y shape {Y.shape}")
     Dz2 = A2 - Y  
     dw_second_layer = (1/m * np.dot(Dz2,A1.T)) 
     db_second_layer = (1/m * np.sum(Dz2, axis=1, keepdims=True))

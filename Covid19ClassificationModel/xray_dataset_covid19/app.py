@@ -1,12 +1,12 @@
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
-from tensorflow.keras.model import load_model # type: ignore
+
 from PIL import Image
 from tensorflow.keras.preprocessing import image # type: ignore
 import io
 import cv2
 import numpy as np
-
+from tensorflow.keras.models import load_model
 
 app = FastAPI()
 

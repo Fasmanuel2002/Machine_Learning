@@ -1,0 +1,15 @@
+# Ignorar imágenes comunes
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# Ignorar datasets grandes
+Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/train/
+Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/test/
+
+# O si quieres ignorar toda la carpeta CatsVsDogs
+Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/

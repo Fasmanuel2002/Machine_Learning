@@ -6,6 +6,7 @@
 *.bmp
 *.tiff
 *.webp
+*.h5
 
 # Ignorar datasets grandes
 Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/train/

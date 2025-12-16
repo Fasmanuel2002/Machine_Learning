@@ -1,0 +1,14 @@
+{"obj": {"type": "AssignString", "path": ["sys", "description"], "value": ""}, "version": 1, "at": 1765873228.9991071}
+{"obj": {"type": "AssignString", "path": ["monitoring", "acd1c920", "hostname"], "value": "ManuelFas.local"}, "version": 2, "at": 1765873228.999669}
+{"obj": {"type": "AssignString", "path": ["sys", "hostname"], "value": "ManuelFas.local"}, "version": 3, "at": 1765873228.9999712}
+{"obj": {"type": "AssignString", "path": ["monitoring", "acd1c920", "pid"], "value": "29419"}, "version": 4, "at": 1765873229.000468}
+{"obj": {"type": "AssignString", "path": ["monitoring", "acd1c920", "tid"], "value": "140704314739648"}, "version": 5, "at": 1765873229.0007381}
+{"obj": {"type": "AssignBool", "path": ["sys", "failed"], "value": false}, "version": 6, "at": 1765873229.000906}
+{"obj": {"type": "AssignInt", "path": ["parameters", "epochs"], "value": 15}, "version": 7, "at": 1765874402.27491}
+{"obj": {"type": "AssignInt", "path": ["parameters", "batch_size"], "value": 32}, "version": 8, "at": 1765874402.275925}
+{"obj": {"type": "AssignFloat", "path": ["parameters", "learning_rate"], "value": 0.001}, "version": 9, "at": 1765874402.2763789}
+{"obj": {"type": "AssignFloat", "path": ["parameters", "weight_decay"], "value": 0.0001}, "version": 10, "at": 1765874402.2766368}
+{"obj": {"type": "AssignString", "path": ["parameters", "optimizer"], "value": "AdamW"}, "version": 11, "at": 1765874402.2769449}
+{"obj": {"type": "AssignString", "path": ["parameters", "loss"], "value": "CrossEntropyLoss"}, "version": 12, "at": 1765874402.2772229}
+{"obj": {"type": "AssignString", "path": ["parameters", "input_size"], "value": "64x64"}, "version": 13, "at": 1765874402.2774541}
+{"obj": {"type": "AssignInt", "path": ["parameters", "num_classes"], "value": 6}, "version": 14, "at": 1765874402.2776818}

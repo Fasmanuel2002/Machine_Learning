@@ -9,7 +9,7 @@ import spacy
 import os
 
 
-def load_data() -> Tuple[List[str]]:
+def load_data() -> Tuple[List[str], List[str]]:
     with open("train.en", encoding="utf8") as f:
         english_data = f.read().splitlines()
 

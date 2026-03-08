@@ -7,7 +7,8 @@ from torchtext.vocab import build_vocab_from_iterator
 import torchtext.datasets as datasets
 import spacy
 import os
-
+from os.path import exists
+from spacy.language import Language
 
 def load_data() -> Tuple[List[str], List[str]]:
     with open("train.en", encoding="utf8") as f:
@@ -21,7 +22,7 @@ def load_data() -> Tuple[List[str], List[str]]:
     return english_data, german_data
 
 
-def load_tokenizers() -> Tuple:
+def load_tokenizers() -> Tuple[Language, Language]:
     try:
         spacy_german = spacy.load("de_core_news_sm")
     except IOError:
@@ -86,4 +87,16 @@ def build_vocabulary(spacy_de , spacy_en):
     vocab_tgt.set_default_index(vocab_tgt["<unk>"])
     
     return vocab_src, vocab_tgt
+
+
+def load_vocab(spacy_de : Language, spacy_en : Language):
+    if not exists("vocab.pt"):
+        vocab_src, vocab_tgt = build_vocabulary(spacy_de=spacy_de , spacy_en=spacy_en)
+        torch.save((vocab_src, vocab_tgt) , "vocab.pt")
+    else:
+        vocab_src, vocab_tgt = torch.load("vocab.pt")
     
+    print("Finished.\nVocabulary sizes:")
+    print(len(vocab_src))
+    print(len(vocab_tgt))
+    return vocab_src, vocab_tgt    

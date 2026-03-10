@@ -1,11 +1,14 @@
 from typing import Tuple
 
-from data import *
+from data import tokenize, load_data
 import torch
 from torch.nn.functional import pad
 from torch import Tensor
-
+from torch.utils.data import random_split, DataLoader
+from torchtext.data.functional import to_map_style_dataset
+from torch.utils.data.distributed import DistributedSampler
 device = torch.device("cude" if torch.cuda.is_available() else "cpu")
+
 def collate_batch(batch, 
                   src_pipeline,
                   tgt_pipeline,
@@ -76,3 +79,78 @@ def collate_batch(batch,
     src = torch.stack(src_list)
     tgt = torch.stack(tgt_list)
     return (src, tgt) # (Batch_size , maximum_padding)
+
+def create_dataloader(
+    device,
+    vocab_src,
+    vocab_tgt,
+    spacy_de,
+    spacy_en,
+    batch_size : int = 12000,
+    max_padding : int = 128,
+    is_distributed : bool = True) -> Tuple[DataLoader, DataLoader]:
+    
+    generator = torch.Generator().manual_seed(42)
+
+    def tokenize_de(text):
+        return tokenize(text, spacy_de)
+    def tokenize_en(text):
+        return tokenize(text, spacy_en)
+    
+    def collate_fn(batch):
+        return collate_batch(
+            batch,
+            tokenize_de,
+            tokenize_en,
+            vocab_src,
+            vocab_tgt,
+            device,
+            max_padding=max_padding,
+            pad_id=vocab_src.get_stoi()["<blank>"],
+        )
+        
+    english_data, german_data = load_data()
+        
+    dataset_pairs = list(zip(english_data, german_data))
+    
+    data_set_size = len(dataset_pairs)
+    train_size = int(0.80  * data_set_size)
+    val_size = int(0.10  * data_set_size)
+    test_size = data_set_size - train_size - val_size
+    
+    train_iter, valid_iter, test_iter  = random_split(dataset=dataset_pairs,
+                                                   lengths=[train_size, val_size, test_size],
+                                                   generator=generator)
+    
+    train_iter_map = to_map_style_dataset(
+        train_iter
+    )
+    
+    valid_iter_map = to_map_style_dataset(
+        valid_iter
+    )
+    train_sampler = (
+        DistributedSampler(train_iter_map) if is_distributed else None
+    )
+    
+    valid_sampler = (
+        DistributedSampler(valid_iter) if is_distributed else None
+    )
+    
+    train_data_loader = DataLoader(
+        train_iter_map,
+        batch_size=batch_size,
+        shuffle=(train_sampler is None),
+        sampler=train_sampler,
+        collate_fn=collate_fn
+    )
+    
+    valid_data_loader = DataLoader(
+        valid_iter_map,
+        batch_size=batch_size,
+        shuffle=(valid_sampler is None),
+        sampler=valid_sampler,
+        collate_fn=collate_fn
+    )
+    
+    return train_data_loader, valid_data_loader

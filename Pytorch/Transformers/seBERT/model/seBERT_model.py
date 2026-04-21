@@ -49,7 +49,8 @@ class seBERT(BaseEstimator, ClassifierMixin):
 
         training_args = TrainingArguments(
             output_dir=self.checkpoints_dir,
-            num_train_epochs=5,
+            num_train_epochs=4,
+            logging_strategy="epoch",
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
             gradient_accumulation_steps=4,
@@ -58,13 +59,16 @@ class seBERT(BaseEstimator, ClassifierMixin):
             evaluation_strategy="epoch",
             save_strategy="no",
             load_best_model_at_end=False,
+            weight_decay=0.1,
+            bf16=True
+
         )
         self.trainer = Trainer(
             model = self.model,
             args = training_args,
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
-            compute_metrics=compute_metrics,
+            compute_metrics=compute_metrics,   
         )
 
         print(self.trainer.train())
@@ -79,8 +83,8 @@ class seBERT(BaseEstimator, ClassifierMixin):
             for _, X_row in enumerate(X):
                 inputs = self.tokenizer(X_row, padding =True, truncation = True, max_length = self.max_length, return_tensors = "pt").to(device)
                 outputs = self.trainer.model(**inputs)
-                logits_worth_automating = torch.sigmoid(outputs.logits_worth_automating)
-                logits_enough_information = torch.sigmoid(outputs.logits_enough_information)
+                logits_worth_automating = torch.sigmoid(outputs["logits_worth_automating"])
+                logits_enough_information = torch.sigmoid(outputs["logits_enough_information"])
                 y_probs_worth_automating.append(logits_worth_automating.item())
                 y_probs_enough.append(logits_enough_information.item())
 
@@ -101,9 +105,10 @@ class seBERT(BaseEstimator, ClassifierMixin):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        model = self.trainer.model
+        state_dict = {
+            k: v.detach().cpu().contiguous()
+            for k, v in self.trainer.model.state_dict().items()
+        }
 
-        for param in model.parameters():
-            param.data = param.data.contiguous()
-
-        torch.save(model.state_dict(), os.path.join(path, "model.pt"))
+        torch.save(state_dict, os.path.join(path, "model.pt"))
+        self.tokenizer.save_pretrained(path)

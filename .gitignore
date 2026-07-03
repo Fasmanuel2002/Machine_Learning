@@ -8,8 +8,10 @@
 *.webp
 *.h5
 
+
 # Ignorar datasets grandes
 Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/train/
 Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/test/
-
-
+Machine_Learning/Pytorch/CNN/IntelImageClassification/runs
+Pytorch/CNN/ImageSegmentation_Pet_DataSet/images
+Pytorch/CNN/ImageSegmentation_Pet_DataSet/trimaps

@@ -7,7 +7,7 @@ from torch import Generator
 class Linear:
     def __init__(self, fan_in : int, fan_out : int, generator : Generator, bias : bool = True) -> None:
         #Innitalization the weights of the model and adding the fan_in for the gain or the wieght initialization see more https://docs.pytorch.org/docs/2.13/nn.init.html
-        self.weight = torch.randn((fan_in, fan_out), generator=generator) / fan_in**0.5
+        self.weight = (torch.randn((fan_in, fan_out), generator=generator) / fan_in**0.5)
         #Innitialization of the bias that if there is BatchNorm will be equal to None because of the BatchNorm bias
         self.bias = torch.zeros(fan_out) if bias else None
         

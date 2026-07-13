@@ -13,13 +13,6 @@ Decoding: Those IDs are converted back into the original text.
 
 class Tokenizer():
     def __init__(self, corpus) -> None:
-        #Define the special Tokens
-        self.PAD_TOKEN = "<PAD>"
-        self.UNK_TOKEN = "<UNK>" #Unknown tokens
-        self.SOS_TOKEN = "<SOS>" #Start of the Sequence
-        self.EOS_TOKEN = "<EOS>" #End of the Sequence
-        
-        special_tokens = special_tokens = [self.PAD_TOKEN, self.UNK_TOKEN, self.SOS_TOKEN, self.EOS_TOKEN]
         
         corpus = corpus.lower()
         
@@ -34,16 +27,24 @@ class Tokenizer():
         #Remove empty strings and build vocabulary (unique words/punctuations)
         vocab = sorted(set([word.strip() for word in words if word.strip() != '']))
         
-        final_vocab = special_tokens + vocab
+        # Add special tokens
+        vocab.append("<unk>")
+        vocab.append("<|endoftext|>")
+        
         
         #Create the mappings
         # word -> token_id
-        self.text_to_token_ids = {unique_word : i for i, unique_word in enumerate(final_vocab)}
+        self.text_to_token_ids = {word: i for i, word in enumerate(vocab)}
+
         
         # token_id -> word
-        self.token_ids_to_token = {i : unique_word for i, unique_word in enumerate(final_vocab)}
+        self.token_ids_to_token = {i: word for word, i in self.text_to_token_ids.items()}
+
+        # Save the unknown token ID for fallback
+        self.unk_token_id = self.text_to_token_ids["<unk>"]
+
     
-    def encode(self, text, add_special_tokens : bool = False):
+    def encode(self, text):
         """
         Converts text into token IDs.
         Steps:
@@ -51,17 +52,17 @@ class Tokenizer():
         2. Map each word/punctuation to its token ID using our dictionary.
         """
         text = text.lower()
-        words = re.split(r'([,.:;?_!"()\']|--)', text)
+        words = re.split(r'([,.:;?_!"()\']|--|\s)', text)
+        
         words = [word.strip() for word in words if word.strip() != '']
         
-        token_ids = [self.text_to_token_ids.get(word, self.text_to_token_ids[self.UNK_TOKEN]) for word in words if word != '']
-        
-        if add_special_tokens:
-            #Addid the Start of the Sentence and the final of the sentence
-            token_ids = [self.text_to_token_ids[self.SOS_TOKEN]] + token_ids + [self.text_to_token_ids[self.EOS_TOKEN]]
-        return token_ids
+        token_ids = [
+            self.text_to_token_ids.get(word, self.unk_token_id)
+            for word in words if word != ''
+        ]
+        return token_ids        
     
-    def decode(self, tokens_ids):
+    def decode(self, token_ids):
         """
         Converts token IDs back into text.
         Steps:
@@ -69,10 +70,8 @@ class Tokenizer():
         2. Join them back together into a single string.
         """
         
-        words = [self.token_ids_to_token[token] for token in tokens_ids 
-                 if token not in [self.text_to_token_ids[self.PAD_TOKEN], 
-                                  self.text_to_token_ids[self.SOS_TOKEN], 
-                                  self.text_to_token_ids[self.EOS_TOKEN]]]
+    
+        words = [self.token_ids_to_token.get(token, "<unk>") for token in token_ids]
         
         return " ".join(words)
         

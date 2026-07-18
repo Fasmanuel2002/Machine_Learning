@@ -1,5 +1,6 @@
 from typing import Any
 
+from IPython import embed
 import torch
 import torch.nn.functional as F
 from torch import Generator
@@ -69,3 +70,58 @@ class Tanh:
         return self.out
     def parameters(self):
         return []
+    
+class Embedding:
+    """
+    Class for making the embedding and change the code from training and inference
+    """
+    def __init__(self, num_embeddings : int, embedding_dim : int) -> None:
+        self.weight = torch.randn((num_embeddings, embedding_dim)) #Output shape is the num of embeddings and the embedding dim
+    
+    
+    def __call__(self, IX):
+        self.out = self.weight[IX] #Indexing the layer for the weights
+        return self.out
+    
+    def parameters(self):
+        return [self.weight]
+    
+
+# -----------------------------------------------------------------------------------------------
+#For Flatten the dimensions of the Neuronal Net
+class FlattenConsecutive:
+    """
+    Class for flatten the dimensions of the embeddings, by 1D or (2, 2, 2) as explained in the video of 
+    Andrej Kaparthy so the model can understand each 2 number everytime
+    """
+    def __init__(self, n : int):
+        self.n = n
+    def __call__(self, x):
+        B, T, C = x.shape #BATCH Size, Sequence lenght, CHANNEL
+        x = x.view(B, T // self.n, C*self.n) #This is for the dimensions of the model so the model can understand each two characters at any time
+        
+        if x.shape[1] == 1:
+            x = x.squeeze(1)
+        self.out = x
+        return self.out
+    
+    def parameters(self):
+        return []
+
+# -----------------------------------------------------------------------------------------------
+#Its for the containers of the model, so you can stack a lot of layers
+class Sequential:
+    
+    def __init__(self, layers):
+        self.layers = layers
+    
+    def __call__(self, x):
+        for layer in self.layers: #This is for calling all the layers in the model and stack them
+            x = layer(x)
+        self.out = x
+        return self.out
+    
+    def parameters(self):
+        # get parameters of all layers and stretch them out into one list
+        return [p for layer in self.layers for p in layer.parameters()]
+    

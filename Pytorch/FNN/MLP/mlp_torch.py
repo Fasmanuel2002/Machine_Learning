@@ -42,9 +42,13 @@ class BatchNorm1D:
         
     def __call__(self, x):
             if self.training:
+                if x.ndim == 2:
+                    dim = 0
+                elif x.ndim == 3:
+                    dim = (0,1)
                 #For updating the training mean and variance
-                xmean = x.mean(0, keepdim=True) #Batch mean
-                xvar = x.var(0, keepdim=True) #Batch variance
+                xmean = x.mean(dim, keepdim=True) #Batch mean
+                xvar = x.var(dim, keepdim=True) #Batch variance
             else:
                 xmean = self.running_mean
                 xvar = self.running_var

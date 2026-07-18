@@ -8,7 +8,8 @@
 *.webp
 *.h5
 *.csv
-
+*.pyc
+*.json
 # Ignorar datasets grandes
 Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/train/
 Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/test/

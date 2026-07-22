@@ -15,16 +15,16 @@ class Encoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.embedding = nn.Embedding(num_embeddings=input_dim, embedding_dim=embedding_dim)
-        self.rnn_layers = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_dim, num_layers=n_layers, dropout=dropout)
+        self.rnn_layers = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_dim, num_layers=n_layers, dropout=dropout, batch_first=True)
         self.dropout = nn.Dropout(p=dropout)
     
     
     def forward(self, x):
-        # X = (src lenght, batch_size) -> (T, B)
+        # x shape: (batch_size, seq_len)
         x = self.dropout(self.embedding(x))
-        # X = embedding (src lenght , batch size, Hidden dim)-> (T, B, H)
+        # embedded shape: (batch_size, seq_len, embedding_dim)
         outputs, (hidden, cell) = self.rnn_layers(x)
-        # outputs -> (T, B, H * n_directions)
+        # outputs -> (B, T, H * n_directions)
         # hidden -> (n_layers * n_directions, B, H)
         # cell  -> (n_layers * n_directions, B, H)
         # outputs are always from the top hidden layer

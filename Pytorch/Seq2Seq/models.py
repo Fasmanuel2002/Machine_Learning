@@ -4,7 +4,7 @@ from torch import nn
 import torch
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim : int , embedding_dim : int , hidden_dim : int, n_layers : int, dropout : int):
+    def __init__(self, input_dim : int , embedding_dim : int , hidden_dim : int, n_layers : int, dropout : float):
         super().__init__()
         """
         input_dim is the size/dimensionality of the one-hot vectors that will be input to the encoder. This is equal to the input (source) vocabulary size.
@@ -35,7 +35,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, output_dim : int, embedding_dim : int, hidden_dim : int, n_layers : int, dropout : int):
+    def __init__(self, output_dim : int, embedding_dim : int, hidden_dim : int, n_layers : int, dropout : float):
         super().__init__()    
         """
         output_dim which is the size of the vocabulary in the output/target language.

@@ -84,7 +84,6 @@ def validation_fuction(
         
         epoch_loss += loss.item()
         
-        print(logits.shape)
         
     return epoch_loss / len(data_loader)
     

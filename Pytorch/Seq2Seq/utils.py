@@ -1,5 +1,5 @@
 import torch.nn as nn
-from models import Seq2Seq
+from models.seq2seq_baseline import Seq2Seq
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.optim as optim

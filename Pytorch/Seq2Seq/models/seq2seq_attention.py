@@ -136,3 +136,53 @@ class DecoderAttention(nn.Module):
         # prediction shape (batch size, output dim)
         
         return prediction, hidden.squeeze(0), a.squeeze(1)
+    
+
+class Seq2SeqAttention(nn.Module):
+    """
+    What is the mission of Seq2Seq
+    receiving the input/source sentence
+    using the encoder to produce the context vectors
+    using the decoder to produce the predicted output/target sentences
+    """
+    def __init__(self, encoder : EncoderAttention, decoder : DecoderAttention, device):
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.device = device
+        
+    def forward(self, src, trg, teacher_forcing_ratio):
+            # Src -> (Batch Size, Src Lenght) 
+            # Trg -> (Batch Size, Trg lenght)
+            # The target ratio its the forcing ratio to choose the next prediction
+            # e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
+            batch_size = trg.shape[0]
+            trg_lenght = trg.shape[1]
+            trg_vocab_size = self.decoder.output_dim #A tensor that has all the output dim
+            
+            #Batch size first because Batch_first = True
+            outputs = torch.zeros(batch_size, trg_lenght, trg_vocab_size).to(self.device) # last hidden state of the encoder is used as the initial hidden state of the decoder
+            
+            encoder_outputs, hidden = self.encoder(src) #Hidden and cell -> (n_layers * n_directions, Batch_size, Hidden dim), the first input of the decoder its the last from the encoder
+            
+            #The first input its a <sos> token for the decoder
+            input = trg[:, 0] #Only Batch Size
+            
+            for t in range(1, trg_lenght): #From 1 to target lenght
+                # insert input token embedding, previous hidden and previous cell states
+                # receive output tensor (predictions) and new hidden and cell states
+                output, hidden, _ = self.decoder(input, hidden, encoder_outputs)
+                
+                
+                outputs[:, t] = output
+                
+                # decide if we are going to use teacher forcing or not
+                teacher_force = random.random() < teacher_forcing_ratio
+                
+                # get the highest predicted token from our predictions
+                top_1 = output.argmax(1)
+                # if teacher forcing, use actual next token as next input
+                # if not, use predicted token
+                input = trg[:, t] if teacher_force else top_1
+            
+            return outputs

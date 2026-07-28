@@ -85,7 +85,7 @@ class DecoderAttention(nn.Module):
                 embedding_dim : int,
                 encoder_hidden_dim : int,
                 decoder_hidden_dim : int,
-                dropout : int,
+                dropout : float,
                 attention : Attention) -> None:
         super().__init__()
         """

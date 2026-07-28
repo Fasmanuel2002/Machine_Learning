@@ -1,5 +1,7 @@
 import torch.nn as nn
 from models.seq2seq_baseline import Seq2Seq
+from models.seq2seq_attention import Seq2SeqAttention
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.optim as optim
@@ -10,6 +12,12 @@ def init_weights(m, low_boundary : float = -0.08, high_boundary : float = 0.08):
     for name, param in m.named_parameters():
         nn.init.uniform_(param, low_boundary, high_boundary)
 
+def init_weights_attention(m):
+    for name, param in m.named_parameters():
+        if "weight" in name:
+            nn.init.normal_(param.data,  mean=0, std=0.01)
+        else:
+            nn.init.constant_(param.data, 0)
 
 
 def plot_weights_initialization(model : Seq2Seq):
@@ -31,7 +39,7 @@ def count_parameters_model(model : Seq2Seq) -> int:
 
 
 def train_fuction(
-    model : Seq2Seq, data_loader : DataLoader, optimizer : optim.Adam, criterion : nn.CrossEntropyLoss,  clip : float, teacher_forcing_ratio : float, device
+    model : Seq2Seq | Seq2SeqAttention, data_loader : DataLoader, optimizer : optim.Adam, criterion : nn.CrossEntropyLoss,  clip : float, teacher_forcing_ratio : float, device
 ) -> float:
     model.train() #Putting the model for training
     epoch_loss = 0.0
@@ -63,7 +71,7 @@ def train_fuction(
     return epoch_loss / len(data_loader)
     
 def validation_fuction(
-    model : Seq2Seq, data_loader : DataLoader, criterion : nn.CrossEntropyLoss,  device
+    model : Seq2Seq | Seq2SeqAttention, data_loader : DataLoader, criterion : nn.CrossEntropyLoss,  device
 ) -> float:
     model.eval() #Putting the model for validation
     epoch_loss = 0.0

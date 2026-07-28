@@ -72,8 +72,10 @@ class Tokenizer():
         
     
         words = [self.token_ids_to_token.get(token, "<unk>") for token in token_ids]
+        raw_text = " ".join(words)
         
-        return " ".join(words)
+        clean_text = re.sub(r'\s+([,.:;?_!"()\'])', r'\1', raw_text)
+        return clean_text
         
     def get_vocab_size(self):
         return len(self.text_to_token_ids)

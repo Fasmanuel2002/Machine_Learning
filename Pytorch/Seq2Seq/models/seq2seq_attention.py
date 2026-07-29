@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 class EncoderAttention(nn.Module):
-    def __init__(self, input_dim : int , embedding_dim : int , encoder_hidden_dim : int, decoder_hidden_dim : int, dropout : float):
+    def __init__(self, input_dim : int , embedding_dim : int , encoder_hidden_dim : int, decoder_hidden_dim : int, num_layers : int, dropout : float):
         super().__init__()
         """
         We are going to change from UNIDIRECTIONAL LSTM -> BIDIRECTIONAL GRU so the model has more context
@@ -18,7 +18,12 @@ class EncoderAttention(nn.Module):
         """
         
         self.embedding = nn.Embedding(num_embeddings=input_dim, embedding_dim=embedding_dim)
-        self.rnn = nn.GRU(input_size=embedding_dim, hidden_size=encoder_hidden_dim, bidirectional=True, batch_first=True)
+        self.rnn = nn.GRU(input_size=embedding_dim, 
+                          hidden_size=encoder_hidden_dim,
+                          bidirectional=True,
+                          num_layers=num_layers,dropout=dropout if num_layers > 1 else 0, 
+                          batch_first=True)
+        
         #It helps so the information between the two directions is accurate and the sizes of encoder and decoder can be different, the fc squashes the information and eliminates shape mismatch
         #Its multiplied by two because of the biderection
         self.fc = nn.Linear(encoder_hidden_dim * 2, decoder_hidden_dim)
@@ -85,6 +90,7 @@ class DecoderAttention(nn.Module):
                 embedding_dim : int,
                 encoder_hidden_dim : int,
                 decoder_hidden_dim : int,
+                num_layers : int,
                 dropout : float,
                 attention : Attention) -> None:
         super().__init__()
@@ -100,14 +106,17 @@ class DecoderAttention(nn.Module):
         self.output_dim = output_dim
         self.attention = attention
         self.embedding = nn.Embedding(num_embeddings=output_dim, embedding_dim=embedding_dim)
+        self.num_layers = num_layers
+        
         self.rnn = nn.GRU(
-        (encoder_hidden_dim * 2) + embedding_dim, #Its multiplied by two because of the BiDirectional 
-        decoder_hidden_dim, batch_first=True)
+            (encoder_hidden_dim * 2) + embedding_dim, 
+            decoder_hidden_dim, num_layers=num_layers, dropout=dropout if num_layers > 1 else 0, batch_first=True)
         
         self.fc_out = nn.Linear(
             in_features=(encoder_hidden_dim * 2) + decoder_hidden_dim + embedding_dim, out_features=output_dim
         )
         self.dropout = nn.Dropout(p=dropout)
+        
 
     def forward(self, input : Tensor, hidden : Tensor, encoder_outputs : Tensor):
         # Input shape : (Batch Size)
@@ -117,7 +126,12 @@ class DecoderAttention(nn.Module):
         
         embedded = self.dropout(self.embedding(input)) # Embedded shape : (1, batch size, embedding dim)
         
-        a = self.attention(hidden, encoder_outputs) # attention shape (Batch size, src lenght)
+        if hidden.dim() == 3:
+            attn_hidden = hidden[-1]
+        else:
+            attn_hidden = hidden
+            
+        a = self.attention(attn_hidden, encoder_outputs) # attention shape (Batch size, src lenght)
         
         a = a.unsqueeze(1) # attention shape (Batch size, 1,  src lenght)
         
@@ -125,7 +139,12 @@ class DecoderAttention(nn.Module):
         
         rnn_input = torch.cat((embedded, weighted), dim=2) # rnn input shape : (Batch_size, 1, (encoder hidden dim * 2) + embedding dim)
         
-        output, hidden = self.rnn(rnn_input, hidden.unsqueeze(0))
+        if hidden.dim() == 2:
+            hidden_input = hidden.unsqueeze(0).repeat(self.num_layers, 1, 1)
+        else:
+            hidden_input = hidden
+            
+        output, hidden = self.rnn(rnn_input, hidden_input)
         # output = [batch size, seq length,  decoder hid dim * n directions]
         # hidden = [batch size, n layers * n directions, decoder hid dim]
         

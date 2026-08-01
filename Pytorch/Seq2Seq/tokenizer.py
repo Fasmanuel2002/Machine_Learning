@@ -1,79 +1,59 @@
 import re
-import pandas    
-"""
-Core job of the tokenizer
-
-Break text into manageable pieces (tokens).
-Map each token to a numerical ID (so models can understand it).
-Convert numbers back to text when needed.
-
-Encoding: The text is broken down into sub-word tokens and mapped to unique IDs.
-Decoding: Those IDs are converted back into the original text.
-"""
 
 class Tokenizer():
     def __init__(self, corpus) -> None:
-        
         corpus = corpus.lower()
         
-        # Dictionaries for mapping words <-> token ids
-        self.text_to_token_ids = {}
-        self.token_ids_to_token = {}
         
-        # Split corpus into words and punctuation while keeping punctuation as separate tokens
-        # Example: "Amazing!" → ["Amazing", "!"]
         words = re.split(r'([,.:;?_!"()\']|--|\s)', corpus)
-        
-        #Remove empty strings and build vocabulary (unique words/punctuations)
         vocab = sorted(set([word.strip() for word in words if word.strip() != '']))
         
-        # Add special tokens
-        vocab.append("<unk>")
-        vocab.append("<|endoftext|>")
+        
+        self.special_tokens = ["<pad>", "<sos>", "<eos>", "<unk>"]
+        vocab = self.special_tokens + vocab
         
         
-        #Create the mappings
-        # word -> token_id
         self.text_to_token_ids = {word: i for i, word in enumerate(vocab)}
-
-        
-        # token_id -> word
         self.token_ids_to_token = {i: word for word, i in self.text_to_token_ids.items()}
 
-        # Save the unknown token ID for fallback
+        
+        self.pad_token_id = self.text_to_token_ids["<pad>"]
+        self.sos_token_id = self.text_to_token_ids["<sos>"]
+        self.eos_token_id = self.text_to_token_ids["<eos>"]
         self.unk_token_id = self.text_to_token_ids["<unk>"]
 
-    
     def encode(self, text):
-        """
-        Converts text into token IDs.
-        Steps:
-        1. Split the text into words + punctuation (keeping punctuation as tokens).
-        2. Map each word/punctuation to its token ID using our dictionary.
-        """
         text = text.lower()
         words = re.split(r'([,.:;?_!"()\']|--|\s)', text)
         
-        words = [word.strip() for word in words if word.strip() != '']
-        
         token_ids = [
-            self.text_to_token_ids.get(word, self.unk_token_id)
-            for word in words if word != ''
+            self.text_to_token_ids.get(word.strip(), self.unk_token_id)
+            for word in words if word.strip() != ''
         ]
+        
+        
+        token_ids.append(self.eos_token_id)
+        
         return token_ids        
     
     def decode(self, token_ids):
-        """
-        Converts token IDs back into text.
-        Steps:
-        1. Convert each token ID into its corresponding word/punctuation.
-        2. Join them back together into a single string.
-        """
-        
-    
-        words = [self.token_ids_to_token.get(token, "<unk>") for token in token_ids]
+        # 1. Blindaje definitivo: si es un tensor, lo aplanamos a 1D y lo pasamos a lista
+        if hasattr(token_ids, "flatten"):
+            token_ids = token_ids.flatten().tolist()
+        elif hasattr(token_ids, "tolist"):
+            token_ids = token_ids.tolist()
+            
+        words = []
+        for token in token_ids:
+            # Si encontramos el Fin de Secuencia, cortamos
+            if token == self.eos_token_id:
+                break
+                
+            # Si no es un token especial de relleno o inicio, lo añadimos
+            if token not in [self.pad_token_id, self.sos_token_id]:
+                words.append(self.token_ids_to_token.get(token, "<unk>"))
+                
         raw_text = " ".join(words)
-        
         clean_text = re.sub(r'\s+([,.:;?_!"()\'])', r'\1', raw_text)
         return clean_text
         

@@ -17,3 +17,9 @@ Machine_Learning/CatsVsDogs_CNN/CatsVsDogs/test/
 Machine_Learning/Pytorch/CNN/IntelImageClassification/runs
 Pytorch/CNN/ImageSegmentation_Pet_DataSet/images
 Pytorch/CNN/ImageSegmentation_Pet_DataSet/trimaps
+# Excepciones: Permitir las imágenes de mi proyecto Seq2Seq
+!Weight_distribution_seq2seq.png
+!Weight_distribution_attention.png
+!LossCurveWithoutAttention.png
+!LossCurveAttention.png
+!output.png

@@ -32,7 +32,7 @@ As seen in both loss curves:
 
 * **The Attention Seq2Seq:** In contrast, the attention model reaches a loss plateau much faster (around epoch 12). Thanks to the attention mechanism and bidirectional GRU, it learns the statistical patterns of the dataset more efficiently.
 
-![Loss Curve Attention](LossCurveAttention.png)
+![Loss Curve Attention](lossCurveAttention.png)
 
 ## Performance Comparison
 

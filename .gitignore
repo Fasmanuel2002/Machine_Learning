@@ -21,5 +21,5 @@ Pytorch/CNN/ImageSegmentation_Pet_DataSet/trimaps
 !Weight_distribution_seq2seq.png
 !Weight_distribution_attention.png
 !LossCurveWithoutAttention.png
-!LossCurveAttention.png
+!lossCurveAttention.png
 !output.png

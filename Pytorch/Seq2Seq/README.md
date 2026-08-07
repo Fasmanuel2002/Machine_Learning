@@ -2,6 +2,8 @@
 
 This repository contains a from-scratch PyTorch reimplementation of two milestone papers that shaped modern Deep Learning and NLP:
 
+(synthetic dataset has been used due to constraint computational resources without GPU)
+
 * **The Baseline:** [Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215) (Sutskever et al., 2014)
 * **The Attention Mechanism:** [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) (Bahdanau et al., 2014)
 

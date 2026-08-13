@@ -2,7 +2,7 @@ from typing import Tuple
 from torch import Tensor
 import torch
 
-def get_batch(split : str , batch_size : int, sequence_length : int, train_data : Tensor, val_data : Tensor, device : str = 'cpu') -> Tuple[Tensor, Tensor]:
+def get_batch(split : str , batch_size : int, sequence_length : int, train_data : Tensor, val_data : Tensor, device : torch.device) -> Tuple[Tensor, Tensor]:
     
     # generate a small batch of data of inputs x and targets y
     data = train_data if split == 'train' else val_data

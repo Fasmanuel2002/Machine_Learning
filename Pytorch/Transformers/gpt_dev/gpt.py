@@ -1,7 +1,74 @@
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
+from typing import Optional
 
+class GPTLM(nn.Module):
+    """
+    Generative Pretrain Transformer (Decoder-only) 
+    The model that fussion all the code written for the GPT
+    """
+    def __init__(self, vocab_size : int, n_embeddings : int, sequence_lenght : int, n_heads : int, n_layers : int,  dropout : float, device) -> None:
+        super().__init__()
+        self.device = device
+        self.sequence_lenght = sequence_lenght
+        self.token_embedding_table = nn.Embedding(num_embeddings=vocab_size, embedding_dim=n_embeddings) #The embedding table
+        self.positional_encoding = nn.Embedding(num_embeddings=sequence_lenght, embedding_dim=n_embeddings) #The Positonal Encoding
+        self.blocks = nn.Sequential(*[Block(n_embeddings=n_embeddings, 
+                                            number_heads=n_heads,
+                                            sequence_lenght=sequence_lenght,
+                                            dropout=dropout) for _ in range(n_layers)])
+        self.layer_normalization_final = nn.LayerNorm(n_embeddings)
+        self.lm_head = nn.Linear(n_embeddings,vocab_size)
+        
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear): 
+            nn.init.normal_(module.weight, mean=0.0, std=0.02) #Gaussian initialization of the weights
+            if module.bias is not None:
+                nn.init.zeros_(module.bias) #Make the biases zero
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02) #Gaussian initialization of the weights
+    
+    def forward(self, idx : torch.Tensor, targets : Optional[torch.Tensor] = None):
+        B, T = idx.shape #idx and targes are both (B,T) tensor of integers
+        
+        token_embeddings = self.token_embedding_table(idx) # (B, T, C)
+        positional_embeddings = self.positional_encoding(torch.arange(T, device=idx.device))
+        x = token_embeddings + positional_embeddings
+        x = self.blocks(x)
+        x = self.layer_normalization_final(x)
+        logits = self.lm_head(x)
+        
+        if targets is None:
+            loss = None
+        else:
+            B, T, C = logits.shape
+            logits = logits.view(B*T, C) # 2D (B*T, C)
+            targets = targets.view(B*T) # 1D (B*T)
+            loss = F.cross_entropy(logits, targets)
+        return logits, loss
+    
+    def generate(self, idx : torch.Tensor, max_new_tokens : int):
+        """
+            idx: current types of index from tokens from a contextual part
+        """
+        for _ in range(max_new_tokens):
+            # crop idx to the last block_size tokens
+            idx_cond = idx[:, -self.sequence_lenght:]
+            #Get the predictions from the model
+            logits, _ = self(idx_cond)
+            #Focus only in the last time step
+            logits = logits[:,-1,:] # (B, T, C) -> (B , C)
+            # Apply the softmax to get the probabilities of the next tokens
+            probabilities = F.softmax(logits, dim=-1)
+            # Sample from the distributions
+            index_next_token = torch.multinomial(probabilities, num_samples=1) #(B, C) -> (B, 1)
+            # append sampled index to running the sequence
+            idx = torch.cat((idx, index_next_token), dim=-1) #(B, T + 1)
+        
+        return idx
 
 class Block(nn.Module):
     """
@@ -65,7 +132,7 @@ class MultiHeadAttention(nn.Module):
         
     def forward(self, x : torch.Tensor):
         out = torch.cat([head(x) for head in self.heads], dim=-1)
-        out = self.dropout(self.proj(x))
+        out = self.dropout(self.proj(out))
         return out
 
 class MaskedHeadAttention(nn.Module):

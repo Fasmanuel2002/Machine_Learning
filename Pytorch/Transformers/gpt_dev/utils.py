@@ -20,7 +20,7 @@ def get_batch(split : str , batch_size : int, sequence_length : int, train_data 
     return input_x, target_y
 
 @torch.no_grad()
-def estimate_loss(model, eval_iters: int, batch_size: int, sequence_length: int, train_data: Tensor, val_data: Tensor, device: torch.device) -> Dict[str,float]:    
+def estimate_loss(model, eval_iters: int, batch_size: int, sequence_length: int, train_data: Tensor, val_data: Tensor, device ) -> Dict[str,float]:    
     out = {}
     model.eval()
     for split in ['train', 'val']:

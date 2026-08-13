@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Dict 
 from torch import Tensor
 import torch
 
@@ -18,3 +18,18 @@ def get_batch(split : str , batch_size : int, sequence_length : int, train_data 
     input_x, target_y = input_x.to(device), target_y.to(device)
     
     return input_x, target_y
+
+@torch.no_grad()
+def estimate_loss(model, eval_iters: int, batch_size: int, sequence_length: int, train_data: Tensor, val_data: Tensor, device: torch.device) -> Dict[str,float]:    
+    out = {}
+    model.eval()
+    for split in ['train', 'val']:
+        losses = torch.zeros(eval_iters)
+        for k in range(eval_iters):
+            X, Y = get_batch(split=split, batch_size=batch_size, sequence_length=sequence_length, train_data=train_data, val_data=val_data, device=device)
+            logits, loss = model(X,Y)
+            losses[k] = loss.item()
+        out[split] = losses.mean()
+    model.train()
+    return out
+        

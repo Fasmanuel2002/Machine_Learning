@@ -4,19 +4,21 @@ import torch
 from EarlyStopping import EarlyStopping
 from torch.utils.tensorboard import SummaryWriter # type: ignore
 
+from google.colab import runtime
+
 def main():
     
     # hyperparameters
     batch_size = 2 # how many independent sequences will we process in parallel?
     sequence_lenght = 8 # what is the maximum context length for predictions?
-    max_iters = 10000
-    eval_interval = 10
-    learning_rate = 3e-4
+    max_iters = 10000 # max of iterations of the training (Epochs)
+    eval_interval = 10 # eval of iterations for seeing the loss (Epochs)
+    learning_rate = 3e-4 # learning rate for the model 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     eval_iters = 10
-    n_embd = 16
-    n_head = 2
-    n_layer = 2
+    n_embd = 16 # number of embeddings for the vectorial space
+    n_head = 2 # number of heads in the attention layers
+    n_layer = 2 # number of layers in the blocks
     dropout = 0.2
     
     
@@ -40,8 +42,8 @@ def main():
     data = torch.tensor(encode(text), dtype=torch.long)
     
     n_len = int(0.90 * len(data))
-    train_data = data[:n_len]
-    val_data = data[n_len:]
+    train_data = data[:n_len] # 90%
+    val_data = data[n_len:] # 10%
     
     
     gpt_model = GPTLM(vocab_size=vocabulary_size, 
@@ -50,7 +52,8 @@ def main():
                       n_heads=n_head, 
                       n_layers=n_layer, 
                       dropout=dropout,
-                      device=device)
+                      device=device
+                    )
     
     m = gpt_model.to(device)
     # print the number of parameters in the model
@@ -90,7 +93,7 @@ def main():
     tensor_board_writer.close()
     
     
-    # Generación de texto
+    #generation of the text
     gpt_model.load_state_dict(torch.load("best_gpt_model.pt"))
     context = torch.zeros((1, 1), dtype=torch.long, device=device)
     print(decode(gpt_model.generate(context, max_new_tokens=500)[0].tolist()))

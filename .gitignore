@@ -23,3 +23,6 @@ Pytorch/CNN/ImageSegmentation_Pet_DataSet/trimaps
 !LossCurveWithoutAttention.png
 !lossCurveAttention.png
 !output.png
+
+!gpt_decoder_only.png
+!AndrejKaparthyVideoGPT.jpg

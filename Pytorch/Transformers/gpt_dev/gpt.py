@@ -14,10 +14,11 @@ class GPTLM(nn.Module):
         self.sequence_lenght = sequence_lenght
         self.token_embedding_table = nn.Embedding(num_embeddings=vocab_size, embedding_dim=n_embeddings) #The embedding table
         self.positional_encoding = nn.Embedding(num_embeddings=sequence_lenght, embedding_dim=n_embeddings) #The Positonal Encoding
-        self.blocks = nn.Sequential(*[Block(n_embeddings=n_embeddings, 
+        self.blocks = nn.ModuleList([Block(n_embeddings=n_embeddings, 
                                             number_heads=n_heads,
                                             sequence_lenght=sequence_lenght,
                                             dropout=dropout) for _ in range(n_layers)])
+        
         self.layer_normalization_final = nn.LayerNorm(n_embeddings)
         self.lm_head = nn.Linear(n_embeddings,vocab_size)
         
@@ -37,7 +38,12 @@ class GPTLM(nn.Module):
         token_embeddings = self.token_embedding_table(idx) # (B, T, C)
         positional_embeddings = self.positional_encoding(torch.arange(T, device=idx.device))
         x = token_embeddings + positional_embeddings
-        x = self.blocks(x)
+        
+        all_attention_weights = []
+        for block in self.blocks:
+            x, attention_weights = block(x) #Gives the tuple of X converted and attention weights
+            all_attention_weights.append(attention_weights)
+            
         x = self.layer_normalization_final(x)
         logits = self.lm_head(x)
         
@@ -48,7 +54,11 @@ class GPTLM(nn.Module):
             logits = logits.view(B*T, C) # 2D (B*T, C)
             targets = targets.view(B*T) # 1D (B*T)
             loss = F.cross_entropy(logits, targets)
-        return logits, loss
+        
+        #Stack all the attention for make the matrix
+        attention_stack = torch.stack(all_attention_weights, dim=1)
+        
+        return logits, loss, attention_stack
     
     def generate(self, idx : torch.Tensor, max_new_tokens : int):
         """
@@ -58,7 +68,7 @@ class GPTLM(nn.Module):
             # crop idx to the last block_size tokens
             idx_cond = idx[:, -self.sequence_lenght:]
             #Get the predictions from the model
-            logits, _ = self(idx_cond)
+            logits, _, _ = self(idx_cond)
             #Focus only in the last time step
             logits = logits[:,-1,:] # (B, T, C) -> (B , C)
             # Apply the softmax to get the probabilities of the next tokens
@@ -89,9 +99,10 @@ class Block(nn.Module):
         self.ln2 = nn.LayerNorm(n_embeddings)
         
     def forward(self, x):
-        x = x + self.head_attention(self.ln1(x)) #Residual connection + MHA
+        mha, attention_weights = self.head_attention(self.ln1(x))
+        x = x + mha #Residual connection + MHA
         x = x + self.fnn(self.ln2(x)) #Residual connection + MLP
-        return x
+        return x, attention_weights
     
 class MLP(nn.Module):
     """
@@ -131,9 +142,14 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         
     def forward(self, x : torch.Tensor):
-        out = torch.cat([head(x) for head in self.heads], dim=-1)
+        outs, attention_weights = zip(*[head(x) for head in self.heads])
+    
+        
+        out = torch.cat(outs, dim=-1)
         out = self.dropout(self.proj(out))
-        return out
+        
+        attention_weights = torch.stack(attention_weights, dim=1)
+        return out, attention_weights
 
 class MaskedHeadAttention(nn.Module):
     """
@@ -167,10 +183,12 @@ class MaskedHeadAttention(nn.Module):
         
         wei = F.softmax(wei, dim=-1)
         
-        wei = self.dropout(wei)
+        attention_weights = wei
         
+        wei = self.dropout(wei)
+    
         output = wei @ v #B, T, T @ B, T, C -> B, T, C
         
-        return output
+        return output, attention_weights
     
     

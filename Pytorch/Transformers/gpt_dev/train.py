@@ -3,24 +3,26 @@ from utils import get_batch, estimate_loss
 import torch
 from EarlyStopping import EarlyStopping
 from torch.utils.tensorboard import SummaryWriter # type: ignore
-
-from google.colab import runtime
+from plots import plot_and_log_attention
 
 def main():
     
     # hyperparameters
-    batch_size = 2 # how many independent sequences will we process in parallel?
-    sequence_lenght = 8 # what is the maximum context length for predictions?
-    max_iters = 10000 # max of iterations of the training (Epochs)
-    eval_interval = 10 # eval of iterations for seeing the loss (Epochs)
+    batch_size = 64 # how many independent sequences will we process in parallel?
+    sequence_lenght = 256 # what is the maximum context length for predictions?
+    max_iters = 5000 # max of iterations of the training (Epochs)
+    eval_interval = 500 # eval of iterations for seeing the loss (Epochs)
     learning_rate = 3e-4 # learning rate for the model 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    eval_iters = 10
-    n_embd = 16 # number of embeddings for the vectorial space
-    n_head = 2 # number of heads in the attention layers
-    n_layer = 2 # number of layers in the blocks
+    eval_iters = 200
+    n_embd = 384 # number of embeddings for the vectorial space
+    n_head = 6 # number of heads in the attention layers
+    n_layer = 6 # number of layers in the blocks
     dropout = 0.2
     
+    print("GPU is avaible:", torch.cuda.is_available())
+    if torch.cuda.is_available():
+        print("Model of GPU:", torch.cuda.get_device_name(0))
     
     torch.manual_seed(1337)
     
@@ -79,19 +81,22 @@ def main():
                 break 
               
             print(f'Epoch {iter}: train loss: {losses["train"]:.4f}, val losses {losses["val"]:.4f}')
-            tensor_board_writer.add_scalar("Train/Loss", losses['train'], iter)
-            tensor_board_writer.add_scalar("Val/Loss", losses['val'], iter)
+            tensor_board_writer.add_scalars("Loss", {
+            "Train": losses['train'],
+            "Val": losses['val']
+            }, iter)
             
         xb, yb = get_batch('train',batch_size=batch_size,sequence_length=sequence_lenght,
                            train_data=train_data,val_data=val_data,device=device) # type: ignore
         
-        logits, loss = gpt_model(xb, yb)
+        logits, loss, _ = gpt_model(xb, yb)
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
     
+    plot_and_log_attention(gpt_model, val_data, sequence_lenght, device, tensor_board_writer, iter, decode)
     tensor_board_writer.close()
-    
+
     
     #generation of the text
     gpt_model.load_state_dict(torch.load("best_gpt_model.pt"))

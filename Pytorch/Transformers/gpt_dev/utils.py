@@ -27,7 +27,7 @@ def estimate_loss(model, eval_iters: int, batch_size: int, sequence_length: int,
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split=split, batch_size=batch_size, sequence_length=sequence_length, train_data=train_data, val_data=val_data, device=device)
-            logits, loss = model(X,Y)
+            logits, loss, _ = model(X,Y)
             losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
